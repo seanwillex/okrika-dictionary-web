@@ -1,54 +1,76 @@
-import React, { useState, useEffect } from 'react';
-import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth } from '../firebaseConfig';
-import { updateProfile } from 'firebase/auth';
+import React, { useState, useEffect } from "react";
+import { auth, storage, db } from "../firebaseConfig"; // Ensure db and storage are imported
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { doc, updateDoc, getDoc } from "firebase/firestore";
+import { Avatar, Button, TextField, CircularProgress, Box } from "@mui/material";
 
 const UserProfile = () => {
-  const [user, loading] = useAuthState(auth);
-  const [displayName, setDisplayName] = useState('');
+  const [displayName, setDisplayName] = useState("");
+  const [profilePicUrl, setProfilePicUrl] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const user = auth.currentUser;
 
   useEffect(() => {
     if (user) {
-      setDisplayName(user.displayName || ''); // Populate with current display name
+      const fetchData = async () => {
+        const userDoc = await getDoc(doc(db, "users", user.uid));
+        if (userDoc.exists()) {
+          setDisplayName(userDoc.data().displayName || "");
+          setProfilePicUrl(userDoc.data().profilePicUrl || "");
+        }
+      };
+      fetchData();
     }
   }, [user]);
 
-  const handleUpdateProfile = async () => {
+  const handleSave = async () => {
+    setLoading(true);
     if (user) {
-      try {
-        await updateProfile(user, { displayName });
-        alert('Profile updated successfully!');
-      } catch (error) {
-        console.error(error);
-        alert('Failed to update profile');
-      }
+      const userDocRef = doc(db, "users", user.uid);
+      await updateDoc(userDocRef, { displayName });
+      alert("Profile updated successfully!");
+    }
+    setLoading(false);
+  };
+
+  const handleProfilePicChange = async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setUploading(true);
+      const fileRef = ref(storage, `profilePictures/${user.uid}`);
+      await uploadBytes(fileRef, file);
+      const fileUrl = await getDownloadURL(fileRef);
+      await updateDoc(doc(db, "users", user.uid), { profilePicUrl: fileUrl });
+      setProfilePicUrl(fileUrl);
+      setUploading(false);
     }
   };
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-
   return (
-    <div>
-      <h2>User Profile</h2>
-      {user ? (
-        <>
-          <p>Email: {user.email}</p>
-          <div>
-            <label>Display Name:</label>
-            <input
-              type="text"
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
-            />
-          </div>
-          <button onClick={handleUpdateProfile}>Update Profile</button>
-        </>
+    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <h2>Profile Management</h2>
+      
+      {profilePicUrl ? (
+        <Avatar src={profilePicUrl} sx={{ width: 100, height: 100 }} />
       ) : (
-        <p>No user is logged in.</p>
+        <Avatar sx={{ width: 100, height: 100 }}>{displayName.charAt(0)}</Avatar>
       )}
-    </div>
+
+      <input type="file" onChange={handleProfilePicChange} />
+      {uploading && <CircularProgress />}
+
+      <TextField
+        label="Display Name"
+        value={displayName}
+        onChange={(e) => setDisplayName(e.target.value)}
+        sx={{ mt: 2, mb: 2 }}
+      />
+
+      <Button variant="contained" onClick={handleSave} disabled={loading}>
+        {loading ? <CircularProgress size={24} /> : "Save"}
+      </Button>
+    </Box>
   );
 };
 
