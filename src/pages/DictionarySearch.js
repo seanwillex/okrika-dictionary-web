@@ -1,52 +1,54 @@
-// src/pages/DictionarySearch.js
 import React, { useState } from 'react';
+import { TextField, Button, Typography, Box, List, ListItem } from '@mui/material';
 import { Link } from 'react-router-dom';
-import { Button, TextField, List, ListItem, ListItemText, Typography } from '@mui/material';
-import { dictionary } from '../data/dictionary';
 
 const DictionarySearch = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [searchResults, setSearchResults] = useState([]);
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState([]);
 
   const handleSearch = () => {
-    if (dictionary && Array.isArray(dictionary)) {
-      const results = dictionary.filter((entry) =>
-        entry.word.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        entry.meaning.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setSearchResults(results);
-    } else {
-      setSearchResults([]);
-    }
+    const dictionary = [
+      { word: 'obiri', meaning: 'dog' },
+      { word: 'mmai', meaning: 'two' },
+    ];
+
+    const filteredResults = dictionary.filter(
+      (entry) => entry.word.includes(query.toLowerCase()) || entry.meaning.includes(query.toLowerCase())
+    );
+    setResults(filteredResults);
   };
 
   return (
-    <div>
-      <Typography variant="h4" gutterBottom>Dictionary Search</Typography>
+    <Box textAlign="center" p={3}>
+      <Typography variant="h4" gutterBottom>
+        Search the Dictionary
+      </Typography>
       <TextField
-        label="Search for a word..."
+        label="Search"
         variant="outlined"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
         fullWidth
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
+        margin="normal"
       />
-      <Button variant="contained" color="primary" onClick={handleSearch} sx={{ marginTop: 2 }}>
+      <Button variant="contained" color="primary" onClick={handleSearch}>
         Search
       </Button>
-      <List sx={{ marginTop: 4 }}>
-        {searchResults.length > 0 ? (
-          searchResults.map((entry, index) => (
-            <ListItem button component={Link} to={`/word-details/${entry.word}`} key={index}>
-              <ListItemText primary={entry.word} secondary={entry.meaning} />
+      <List>
+        {results.length > 0 ? (
+          results.map((entry, index) => (
+            <ListItem key={index}>
+              <Typography>
+                {entry.word} - {entry.meaning} 
+                <Button component={Link} to={`/word/${entry.word}`}>Details</Button>
+              </Typography>
             </ListItem>
           ))
         ) : (
-          <Typography variant="body1" sx={{ marginTop: 2 }}>
-            No results found. Try searching for another word.
-          </Typography>
+          <Typography>No results found. Try searching for another word.</Typography>
         )}
       </List>
-    </div>
+    </Box>
   );
 };
 

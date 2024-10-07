@@ -1,35 +1,31 @@
-// src/pages/WordDetails.js
 import React from 'react';
 import { useParams } from 'react-router-dom';
-import { Typography, Box, Paper } from '@mui/material';
-import { dictionary } from '../data/dictionary';
+import { Typography, Box } from '@mui/material';
 
 const WordDetails = () => {
-  const { word } = useParams();
+  const { wordId } = useParams();
 
-  // Find the word details in the dictionary
-  const wordDetails = dictionary.find((entry) => entry.word.toLowerCase() === word.toLowerCase());
+  const wordDetails = {
+    obiri: {
+      meaning: 'dog',
+      example: 'The dog barks at night.',
+      exampleOkrika: 'Obiri nemi ribe ngbodo.',
+    },
+    // Add more word details here
+  };
 
-  if (!wordDetails) {
-    return <Typography variant="h6">Word not found.</Typography>;
+  const word = wordDetails[wordId];
+
+  if (!word) {
+    return <Typography>Word not found.</Typography>;
   }
 
   return (
-    <Box sx={{ marginTop: 4 }}>
-      <Paper elevation={3} sx={{ padding: 3 }}>
-        <Typography variant="h4" gutterBottom>{wordDetails.word}</Typography>
-        <Typography variant="body1"><strong>Meaning:</strong> {wordDetails.meaning}</Typography>
-        <Typography variant="body1"><strong>Part of Speech:</strong> {wordDetails.partOfSpeech}</Typography>
-        <Typography variant="body1" sx={{ marginTop: 2 }}>
-          <strong>Okrika Example:</strong> {wordDetails.okrikaExample}
-        </Typography>
-        <Typography variant="body1" sx={{ marginTop: 1 }}>
-          <strong>English Example:</strong> {wordDetails.englishExample}
-        </Typography>
-        <Typography variant="body1" sx={{ marginTop: 2 }}>
-          <strong>Cultural Insight:</strong> {wordDetails.culturalInsight}
-        </Typography>
-      </Paper>
+    <Box textAlign="center" p={3}>
+      <Typography variant="h4">{wordId}</Typography>
+      <Typography variant="h6">Meaning: {word.meaning}</Typography>
+      <Typography variant="h6">Example in English: {word.example}</Typography>
+      <Typography variant="h6">Example in Okrika: {word.exampleOkrika}</Typography>
     </Box>
   );
 };
